@@ -28,6 +28,7 @@ class Board():
         self.pieces = [None]*self.n
         for i in range(self.n):
             self.pieces[i] = [0]*self.n
+        self.last_move = None
 
     # add [][] indexer syntax to the Board
     def __getitem__(self, index): 
@@ -94,7 +95,7 @@ class Board():
 
     def execute_move(self, move, color):
         """Perform the given move on the board; 
-        color gives the color pf the piece to play (1=white,-1=black)
+        color gives the color of the piece to play (1=white,-1=black)
         """
 
         (x,y) = move
@@ -102,4 +103,3 @@ class Board():
         # Add the piece to the empty square.
         assert self[x][y] == 0
         self[x][y] = color
-

@@ -3,8 +3,9 @@ import os
 
 import logging
 import coloredlogs
-from tictactoe.TicTacToeGame import TicTacToeGame
-from tictactoe.keras.NNet import NNetWrapper as nn
+import ultimate_tictactoe.UltimateTicTacToeGame as Game
+from ultimate_tictactoe.UltimateTicTacToeGame import UltimateTicTacToeGame
+from ultimate_tictactoe.keras.NNet import NNetWrapper as nn
 from utils import *
 import numpy as np
 
@@ -17,13 +18,13 @@ args = dotdict({
     'cpuct': 1.0,
     'checkpoint': './temp/',
     'load_model': True,
-    'load_folder_file': ('./temp_tic_tac_toe', 'best.pth.tar'),
+    'load_folder_file': ('./temp_uttt', 'best.pth.tar'),
     'numItersForTrainExamplesHistory': 20,
 })
 
 def play_game():
-    log.info('Loading %s...', TicTacToeGame.__name__)
-    g = TicTacToeGame()
+    log.info('Loading %s...', UltimateTicTacToeGame.__name__)
+    g = UltimateTicTacToeGame()
 
     log.info('Loading %s...', nn.__name__)
     nnet = nn(g)
