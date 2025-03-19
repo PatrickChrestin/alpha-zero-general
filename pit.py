@@ -1,7 +1,6 @@
 import Arena
 from MCTS import MCTS
-import ultimate_tictactoe.UltimateTicTacToeGame as Game
-from ultimate_tictactoe.UltimateTicTacToeGame import UltimateTicTacToeGame
+from ultimate_tictactoe.UltimateTicTacToeGame import UltimateTicTacToeGame as Game
 from ultimate_tictactoe.UltimateTicTacToePlayers import HumanUltimateTicTacToePlayer
 from ultimate_tictactoe.keras.NNet import NNetWrapper as NNet
 
@@ -22,7 +21,7 @@ human_vs_cpu = True
 #else:
 #    g = OthelloGame(8)
 
-g = UltimateTicTacToeGame()
+g = Game()
 
 # all players
 #rp = RandomPlayer(g).play
@@ -53,6 +52,6 @@ else:
 
     player2 = n2p  # Player 2 is neural network if it's cpu vs cpu.
 
-arena = Arena.Arena(n1p, player2, g, display=UltimateTicTacToeGame.display)
+arena = Arena.Arena(n1p, player2, g, display=Game.display)
 
 print(arena.playGames(2, verbose=True))

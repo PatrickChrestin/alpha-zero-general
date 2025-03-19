@@ -34,6 +34,10 @@ class SmallBoard():
             return False
         return not self.is_full()
     
+    def is_finished(self):
+        """Check if the board is won or drawn"""
+        return self.winner != 0
+    
     def get_legal_moves(self):
         if self.winner != 0:
             return []
@@ -103,8 +107,8 @@ class Board():
         # Extract small coordinates from last move
         _, _, small_x, small_y = self.last_move
         
-        # If the corresponding board is full or won, any board is valid
-        if not self.boards[small_x][small_y].has_legal_moves():
+        # If the corresponding board is finished (won or drawn), any board is valid
+        if self.boards[small_x][small_y].is_finished() or not self.boards[small_x][small_y].has_legal_moves():
             return None
         
         return small_x, small_y
@@ -116,17 +120,19 @@ class Board():
         next_board = self._get_next_board_coords()
         moves = []
         
-        # If next_board is None, player can play in any non-won small board
+        # If next_board is None, player can play in any non-finished small board
         if next_board is None:
             for big_y in range(3):
                 for big_x in range(3):
-                    if self.meta_board[big_x][big_y] == 0:
+                    # Only consider boards that are not yet finished
+                    if not self.boards[big_x][big_y].is_finished():
                         small_moves = self.boards[big_x][big_y].get_legal_moves()
                         for small_x, small_y in small_moves:
                             moves.append((big_x, big_y, small_x, small_y))
         else:
             big_x, big_y = next_board
-            if self.meta_board[big_x][big_y] == 0:
+            # Only if the target board is not finished
+            if not self.boards[big_x][big_y].is_finished():
                 small_moves = self.boards[big_x][big_y].get_legal_moves()
                 for small_x, small_y in small_moves:
                     moves.append((big_x, big_y, small_x, small_y))
@@ -169,6 +175,9 @@ class Board():
         next_board = self._get_next_board_coords()
         if next_board is not None:
             assert (big_x, big_y) == next_board, "Must play in the board specified by the last move"
+        else:
+            # If free to play anywhere, ensure the target board is not finished
+            assert not self.boards[big_x][big_y].is_finished(), "Cannot play in a finished board"
         
         # Execute move on the small board
         self.boards[big_x][big_y].execute_move((small_x, small_y), color)
