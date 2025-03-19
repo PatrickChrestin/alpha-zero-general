@@ -27,7 +27,12 @@ class UltimateTicTacToeGame(Game):
     def getInitBoard(self):
         # Return initial board (numpy board)
         b = Board(self.n, self.N)
-        return np.array(b.pieces)
+        # Convert the pieces and meta_board into a single numpy array
+        # We'll use the first n*N × n*N elements for the pieces
+        # and append the N×N meta_board at the end
+        board = np.array(b.pieces)
+        meta = np.array(b.meta_board)
+        return np.concatenate((board.flatten(), meta.flatten()))
 
     def getBoardSize(self):
         # Return (n*N, n*N) for the total board size
@@ -45,9 +50,16 @@ class UltimateTicTacToeGame(Game):
             return (board, -player)
             
         b = Board(self.n, self.N)
-        b.pieces = np.copy(board)
-        b.meta_board = self._rebuild_meta_board(b)
-
+        
+        # Extract pieces and meta_board from the flattened board
+        total_pieces = self.n * self.N * self.n * self.N
+        pieces_flat = board[:total_pieces]
+        meta_flat = board[total_pieces:]
+        
+        # Reshape them back
+        b.pieces = pieces_flat.reshape((self.n * self.N, self.n * self.N)).tolist()
+        b.meta_board = meta_flat.reshape((self.N, self.N)).tolist()
+        
         # Convert action to move coordinates
         move = self._action_to_move(action)
         b.execute_move(move, player)
@@ -55,14 +67,27 @@ class UltimateTicTacToeGame(Game):
         # Store last move to determine next valid board
         self.last_move = move
         
-        return (b.pieces, -player)
+        # Recombine pieces and meta_board for the next state
+        new_pieces = np.array(b.pieces).flatten()
+        new_meta = np.array(b.meta_board).flatten()
+        new_board = np.concatenate((new_pieces, new_meta))
+        
+        return (new_board, -player)
 
 
     def getValidMoves(self, board, player):
         # Return a fixed size binary vector of valid moves
         valids = [0] * self.getActionSize()
         b = Board(self.n, self.N)
-        b.pieces = np.copy(board)
+        
+        # Extract pieces and meta_board from the flattened board
+        total_pieces = self.n * self.N * self.n * self.N
+        pieces_flat = board[:total_pieces]
+        meta_flat = board[total_pieces:]
+        
+        # Reshape them back
+        b.pieces = pieces_flat.reshape((self.n * self.N, self.n * self.N)).tolist()
+        b.meta_board = meta_flat.reshape((self.N, self.N)).tolist()
         
         legal_moves = b.get_legal_moves(player, self.last_move)
         
@@ -80,7 +105,15 @@ class UltimateTicTacToeGame(Game):
         # Return 0 if not ended, 1 if player 1 won, -1 if player 1 lost
         # player = 1
         b = Board(self.n, self.N)
-        b.pieces = np.copy(board)
+        
+        # Extract pieces and meta_board from the flattened board
+        total_pieces = self.n * self.N * self.n * self.N
+        pieces_flat = board[:total_pieces]
+        meta_flat = board[total_pieces:]
+        
+        # Reshape them back
+        b.pieces = pieces_flat.reshape((self.n * self.N, self.n * self.N)).tolist()
+        b.meta_board = meta_flat.reshape((self.N, self.N)).tolist()
         
         if b.is_win(player):
             return 1
@@ -92,8 +125,11 @@ class UltimateTicTacToeGame(Game):
         return 1e-4
 
     def getCanonicalForm(self, board, player):
-        # Return state if player==1, else return -state if player==-1
-        return player * board
+        # For boards that include meta information, we need to handle them carefully
+        total_pieces = self.n * self.N * self.n * self.N 
+        pieces_part = board[:total_pieces] * player
+        meta_part = board[total_pieces:]  # Meta board doesn't get flipped
+        return np.concatenate((pieces_part, meta_part))
 
     def getSymmetries(self, board, pi):
         # Mirror, rotational symmetries
@@ -138,6 +174,11 @@ class UltimateTicTacToeGame(Game):
     def display(board):
         n = 3  # Size of each small board
         N = 3  # Number of small boards
+
+        # Extract pieces and meta_board from the flattened board
+        total_pieces = n * N * n * N
+        pieces_flat = board[:total_pieces]
+        pieces = pieces_flat.reshape((n * N, n * N))
         
         # Print column numbers
         print("   ", end="")
@@ -151,7 +192,7 @@ class UltimateTicTacToeGame(Game):
         for i in range(n * N):
             print(f"{i} |", end="")  # Print row number
             for j in range(n * N):
-                piece = board[i][j]
+                piece = pieces[i][j]
                 print(UltimateTicTacToeGame.square_content[piece], end=" ")
                 
                 # Print vertical separator between small boards
@@ -165,3 +206,12 @@ class UltimateTicTacToeGame(Game):
         
         # Print bottom horizontal line
         print("  " + "-" * (n * N * 2 + N - 1))
+        
+        # Extract and display meta_board if needed for debugging
+        meta_flat = board[total_pieces:]
+        meta_board = meta_flat.reshape((N, N))
+        print("\nMeta Board Status:")
+        for i in range(N):
+            for j in range(N):
+                print(UltimateTicTacToeGame.square_content[meta_board[i][j]], end=" ")
+            print()
